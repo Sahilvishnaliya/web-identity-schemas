@@ -55,6 +55,19 @@ export type CredentialStatusType =
 export type StatusPurpose = "revocation" | "suspension" | string
 
 /**
+ * Human-readable status message for a multi-bit BitstringStatusList status
+ * value.
+ * @see {@link https://www.w3.org/TR/vc-bitstring-status-list/#statusmessage}
+ */
+export interface StatusMessage {
+  /** Status value expressed as a hexadecimal string (e.g. "0x0") */
+  status: string
+
+  /** Human-readable message for the status value */
+  message: string
+}
+
+/**
  * Credential status.
  * @see {@link https://www.w3.org/TR/vc-data-model/#status}
  */
@@ -73,6 +86,19 @@ export interface CredentialStatus {
 
   /** Status purpose */
   statusPurpose?: StatusPurpose
+
+  /**
+   * Number of bits per status value; must be a positive integer. If absent,
+   * processing is done as if it were provided with a value of 1.
+   * @see {@link https://www.w3.org/TR/vc-bitstring-status-list/#statussize}
+   */
+  statusSize?: number
+
+  /** Human-readable messages indexed by status value (multi-bit statuses) */
+  statusMessage?: StatusMessage[]
+
+  /** URL or list of URLs to documentation for interpreting status values */
+  statusReference?: string | string[]
 }
 
 /**

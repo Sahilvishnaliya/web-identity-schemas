@@ -156,6 +156,54 @@ export const CredentialStatusSchema = v.object({
       v.custom<StatusPurpose>(() => true),
     ),
   ),
+
+  /**
+   * Number of bits per status value; must be a positive integer. If absent,
+   * processing is done as if it were provided with a value of 1.
+   * @see {@link https://www.w3.org/TR/vc-bitstring-status-list/#statussize}
+   */
+  statusSize: v.optional(v.pipe(v.number(), v.integer(), v.minValue(1))),
+
+  /** Human-readable messages indexed by status value (multi-bit statuses) */
+  statusMessage: v.optional(
+    v.array(
+      v.object({
+        /** Status value expressed as a hexadecimal string (e.g. "0x0") */
+        status: v.pipe(
+          v.string(),
+          v.regex(
+            /^0x[0-9a-fA-F]+$/,
+            "Must be a hexadecimal string with 0x prefix",
+          ),
+        ),
+
+        /** Human-readable message for the status value */
+        message: v.string(),
+      }),
+    ),
+  ),
+
+  /** URL or list of URLs to documentation for interpreting status values */
+  statusReference: v.optional(
+    v.union([
+      v.pipe(
+        v.string(),
+        v.regex(
+          /^[a-zA-Z][a-zA-Z0-9+.-]*:.+/,
+          "Must be a valid URI with scheme",
+        ),
+      ),
+      v.array(
+        v.pipe(
+          v.string(),
+          v.regex(
+            /^[a-zA-Z][a-zA-Z0-9+.-]*:.+/,
+            "Must be a valid URI with scheme",
+          ),
+        ),
+      ),
+    ]),
+  ),
 } satisfies Shape<CredentialStatus>)
 
 /**

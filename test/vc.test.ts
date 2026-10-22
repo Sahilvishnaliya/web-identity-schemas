@@ -193,6 +193,93 @@ describe("vc", () => {
           },
         )
       })
+
+      test("BitstringStatusListEntry - preserves spec Example 2 multi-bit fields", () => {
+        // Verbatim credentialStatus entry from the BitstringStatusList spec:
+        // https://www.w3.org/TR/vc-bitstring-status-list/#example-example-statuslistcredential-using-more-complex-entries
+        const complexStatus = {
+          id: "https://example.com/credentials/status/8#492847",
+          type: "BitstringStatusListEntry",
+          statusPurpose: "message",
+          statusListIndex: "492847",
+          statusSize: 2,
+          statusListCredential: "https://example.com/credentials/status/8",
+          statusMessage: [
+            { status: "0x0", message: "pending_review" },
+            { status: "0x1", message: "accepted" },
+            { status: "0x2", message: "rejected" },
+          ],
+          statusReference: "https://example.org/status-dictionary/",
+        }
+
+        expect(complexStatus).toMatchSchema(
+          schemas.CredentialStatusSchema,
+          (parsed) => {
+            expect(parsed.statusSize).toBe(2)
+            expect(parsed.statusMessage).toEqual([
+              { status: "0x0", message: "pending_review" },
+              { status: "0x1", message: "accepted" },
+              { status: "0x2", message: "rejected" },
+            ])
+            expect(parsed.statusReference).toBe(
+              "https://example.org/status-dictionary/",
+            )
+          },
+        )
+      })
+
+      test("BitstringStatusListEntry - preserves array-form statusReference", () => {
+        const statusWithReferences = {
+          id: "https://example.com/status/3#11",
+          type: "BitstringStatusListEntry",
+          statusListCredential: "https://example.com/status/3",
+          statusListIndex: "11",
+          statusPurpose: "suspension",
+          statusReference: [
+            "https://example.org/status-dictionary/",
+            "https://example.org/status-messages/",
+          ],
+        }
+
+        expect(statusWithReferences).toMatchSchema(
+          schemas.CredentialStatusSchema,
+          (parsed) => {
+            expect(parsed.statusReference).toEqual([
+              "https://example.org/status-dictionary/",
+              "https://example.org/status-messages/",
+            ])
+          },
+        )
+      })
+
+      test("invalid BitstringStatusListEntry detail fields", () => {
+        const validStatus = {
+          id: "https://example.com/status/4#9",
+          type: "BitstringStatusListEntry",
+          statusListCredential: "https://example.com/status/4",
+          statusListIndex: "9",
+          statusPurpose: "suspension",
+        }
+
+        const invalidStatuses = [
+          // statusSize must be a positive integer
+          { ...validStatus, statusSize: 0 },
+          { ...validStatus, statusSize: 1.5 },
+          // statusMessage statuses must be hex strings with 0x prefix
+          {
+            ...validStatus,
+            statusMessage: [{ status: "pending", message: "pending_review" }],
+          },
+          // statusReference must be a URL
+          { ...validStatus, statusReference: "not-a-url" },
+        ]
+
+        for (const status of invalidStatuses) {
+          expect(status).not.toMatchSchema(
+            schemas.CredentialStatusSchema as never,
+          )
+        }
+      })
     })
 
     describe("VerifiableCredentialSchema", () => {
